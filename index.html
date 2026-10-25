@@ -10,9 +10,24 @@
   </head>
   <body>
     <canvas id="game"></canvas>
+    <canvas id="overlay"></canvas>
     <div class="hud">
-      <h1>Fore!</h1>
-      <p>Flick-to-swing golf. In development.</p>
+      <p class="title">Fore!</p>
+      <p class="hint" id="hint"></p>
+      <p class="callout" id="callout"></p>
+      <p class="live" id="live" hidden><span id="live-yards">0</span> yds</p>
+      <div class="card" id="card" hidden>
+        <p class="strike" id="r-strike"></p>
+        <dl>
+          <dt>Carry</dt><dd id="r-carry"></dd>
+          <dt>Total</dt><dd id="r-total"></dd>
+          <dt>Ball speed</dt><dd id="r-speed"></dd>
+          <dt>Shape</dt><dd id="r-shape"></dd>
+        </dl>
+        <p class="again">Tap to hit again</p>
+      </div>
+      <button class="reset" id="reset" type="button" hidden>Reset <kbd>R</kbd></button>
+      <p class="debug" id="debug"></p>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
