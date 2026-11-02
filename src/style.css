@@ -44,10 +44,36 @@ body {
   display: none !important;
 }
 
-.title {
+.top-left {
   position: absolute;
   top: max(12px, env(safe-area-inset-top));
   left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.longest {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgb(20 50 30 / 55%);
+  font-size: 14px;
+  font-weight: 600;
+  text-shadow: none;
+  transition: background 0.3s;
+}
+
+.longest b {
+  margin-left: 2px;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.longest.record {
+  background: #c99a12;
+}
+
+.title {
   font-size: 28px;
   font-weight: 900;
   letter-spacing: -0.02em;

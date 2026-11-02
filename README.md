@@ -4,7 +4,7 @@ A flick-to-swing golf game that runs in your browser. Flick to swing, nail the t
 
 **Play:** https://viibezcoding.github.io/fore/
 
-> Status: early development (Phase 1: swing prototype). See [GAME_DESIGN.md](GAME_DESIGN.md) for the full plan.
+> Status: early development (Phase 2 complete: ball flight, wind, surfaces and boosters). See [GAME_DESIGN.md](GAME_DESIGN.md) for the full plan.
 
 ## How to play
 

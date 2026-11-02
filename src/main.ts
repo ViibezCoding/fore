@@ -15,6 +15,7 @@ import { generateBoosters } from './physics/boosterLayout';
 import { SURFACES, surfaceAt } from './physics/surfaces';
 import { CALM, rollWind, windVector, type Wind } from './physics/wind';
 import { seededRandom } from './core/random';
+import { loadLongestDrive, saveLongestDrive } from './core/save';
 import { BallTrail } from './scene/ballTrail';
 import { BoosterMeshes } from './scene/boosterMeshes';
 import { buildRangeProps } from './scene/rangeProps';
@@ -90,6 +91,7 @@ let shot: { ball: BallState; strike: Strike; ballSpeed: number; spinTilt: number
 let resultAt = 0;
 let accumulator = 0;
 let boostsSeen = 0;
+let longestDrive = loadLongestDrive();
 
 function resetToTee() {
   mode = 'ready';
@@ -105,6 +107,7 @@ function resetToTee() {
   newWind();
   env.boosters = generateBoosters(random).boosters;
   boosterMeshes.setLayout(env.boosters);
+  hud.longestDrive(longestDrive);
   hud.hideResult();
   hud.showReset(false);
   hud.liveDistance(null);
@@ -200,10 +203,17 @@ function finishShot(s: NonNullable<typeof shot>) {
   mode = 'result';
   resultAt = performance.now();
   hud.liveDistance(null);
+  const totalYards = horizontalDistance(TEE_SPOT, s.ball.pos) * METERS_TO_YARDS;
+  // A ball in the water is lost, so it can't be the longest drive.
+  if (s.ball.lie !== 'water' && totalYards > longestDrive) {
+    longestDrive = totalYards;
+    saveLongestDrive(longestDrive);
+    hud.longestDrive(longestDrive, true);
+  }
   hud.showResult({
     strike: s.strike,
     carryYards: (s.ball.carry ?? 0) * METERS_TO_YARDS,
-    totalYards: horizontalDistance(TEE_SPOT, s.ball.pos) * METERS_TO_YARDS,
+    totalYards,
     ballMph: s.ballSpeed * MPS_TO_MPH,
     shape: shapeName(s.spinTilt),
     lie: s.ball.lie ? SURFACES[s.ball.lie].label : '—',

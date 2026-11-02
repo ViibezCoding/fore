@@ -12,7 +12,10 @@
     <canvas id="game"></canvas>
     <canvas id="overlay"></canvas>
     <div class="hud">
-      <p class="title">Fore!</p>
+      <div class="top-left">
+        <p class="title">Fore!</p>
+        <p class="longest" id="longest">Longest drive <b id="longest-yards">—</b></p>
+      </div>
       <div class="wind" id="wind" aria-label="Wind">
         <svg class="wind-arrow" id="wind-arrow" viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
           <path d="M12 2 L19 11 H14.5 V22 H9.5 V11 H5 Z" fill="currentColor" />

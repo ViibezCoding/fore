@@ -22,6 +22,8 @@ const liveYards = $('live-yards');
 const card = $('card');
 const debug = $('debug');
 const reset = $<HTMLButtonElement>('reset');
+const longest = $('longest');
+const longestYards = $('longest-yards');
 const windBox = $('wind');
 const windArrow = $('wind-arrow');
 const windSpeed = $('wind-speed');
@@ -80,6 +82,11 @@ export const hud = {
 
   hideResult() {
     card.hidden = true;
+  },
+
+  longestDrive(yards: number, isNew = false) {
+    longestYards.textContent = yards > 0 ? `${Math.round(yards)} yds` : '—';
+    longest.classList.toggle('record', isNew);
   },
 
   /** Up on screen is downrange, so the arrow turns clockwise toward the golfer's right. */
