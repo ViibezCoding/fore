@@ -266,6 +266,79 @@ body {
   cursor: pointer;
 }
 
+.round {
+  position: absolute;
+  left: 50%;
+  bottom: max(84px, calc(env(safe-area-inset-bottom) + 76px));
+  transform: translateX(-50%);
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgb(20 50 30 / 72%);
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-shadow: none;
+}
+
+.round b {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.round-over {
+  position: fixed;
+  inset: 0;
+  background: rgb(12 32 20 / 38%);
+}
+
+.card.round-card {
+  width: min(360px, calc(100% - 32px));
+  text-align: center;
+}
+
+.round-card .eyebrow {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.round-card .score {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.round-card .score span {
+  font-size: 60px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.round-card .new-best {
+  color: #ffd84a;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.round-card dl {
+  margin: 12px 0 16px;
+}
+
+.round-card .menu-item {
+  justify-content: center;
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px 20px;
+  text-align: center;
+}
+
+.menu-item.secondary {
+  background: rgb(255 255 255 / 14%);
+  color: #fff;
+}
+
+.callout.monster {
+  color: #2de2e6;
+}
+
 /* The in-game HUD stays out of the way while the menu is up. */
 body.in-menu .hud {
   display: none;
@@ -277,10 +350,34 @@ body.in-menu .hud {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: safe center;
   gap: 10px;
-  padding: 16px;
+  padding: 64px 16px 16px;
+  overflow-y: auto;
   background: rgb(12 32 20 / 38%);
+}
+
+.tee-balance {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px 6px 10px;
+  border-radius: 999px;
+  background: rgb(20 50 30 / 78%);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.tee-balance svg {
+  color: #ffd84a;
+}
+
+.tee-balance b {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
 }
 
 .menu h1 {
@@ -317,6 +414,13 @@ body.in-menu .hud {
   background: rgb(20 50 30 / 78%);
   color: rgb(255 255 255 / 72%);
   cursor: default;
+}
+
+.menu-item .with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font: inherit;
 }
 
 .menu-item span {

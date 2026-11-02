@@ -32,22 +32,55 @@
           <dt>Total</dt><dd id="r-total"></dd>
           <dt>Lie</dt><dd id="r-lie"></dd>
           <dt>Boosts</dt><dd id="r-boosts"></dd>
+          <dt id="r-tees-label" hidden>Tees</dt><dd id="r-tees" hidden></dd>
           <dt>Ball speed</dt><dd id="r-speed"></dd>
           <dt>Shape</dt><dd id="r-shape"></dd>
         </dl>
-        <p class="again">Tap to hit again</p>
+        <p class="again" id="r-again">Tap to hit again</p>
       </div>
-      <button class="reset" id="reset" type="button" hidden>Reset <kbd>R</kbd></button>
+      <button class="reset" id="reset" type="button" hidden><span id="reset-label">Reset</span> <kbd>R</kbd></button>
+      <p class="round" id="round" hidden></p>
       <button class="to-menu" id="to-menu" type="button">Menu</button>
       <p class="debug" id="debug"></p>
     </div>
+    <div class="round-over" id="round-over" hidden>
+      <div class="card round-card">
+        <p class="eyebrow">Long Drive Competition</p>
+        <p class="score"><span id="o-best">0</span> yds</p>
+        <p class="new-best" id="o-new" hidden>New best!</p>
+        <dl>
+          <dt>Monster drives</dt><dd id="o-monsters"></dd>
+          <dt>Perfect strikes</dt><dd id="o-perfects"></dd>
+          <dt>Tees earned</dt><dd id="o-tees"></dd>
+          <dt>Your best</dt><dd id="o-record"></dd>
+          <dt>Tees total</dt><dd id="o-total"></dd>
+        </dl>
+        <button class="menu-item" id="o-again" type="button">Play again</button>
+        <button class="menu-item secondary" id="o-menu" type="button">Menu</button>
+      </div>
+    </div>
     <nav class="menu" id="menu" aria-label="Main menu">
+      <p class="tee-balance" aria-label="Tees balance">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <path d="M4 3h16v2.5c0 1.5-4.6 3-6.6 4.2L12.8 21h-1.6l-.6-11.3C8.6 8.500 4 7 4 5.500Z" fill="currentColor" />
+        </svg>
+        <b id="tee-balance">0</b> Tees
+      </p>
       <h1>Fore!</h1>
       <button class="menu-item" id="play-range" type="button">Driving Range</button>
-      <button class="menu-item" type="button" disabled>Long Drive Competition <span>Coming soon</span></button>
+      <button class="menu-item" id="play-long-drive" type="button">Long Drive Competition</button>
       <button class="menu-item" type="button" disabled>Closest to the Pin <span>Coming soon</span></button>
       <button class="menu-item" type="button" disabled>Long Drive Tour <span>Coming soon</span></button>
       <button class="menu-item" type="button" disabled>Accolades <span>Coming soon</span></button>
+      <button class="menu-item" type="button" disabled>
+        <b class="with-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path d="M6 8h12l1.300 12.500H4.700Z M9 10V6.500a3 3 0 0 1 6 0V10" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+          Shop
+        </b>
+        <span>Coming soon</span>
+      </button>
     </nav>
     <script type="module" src="/src/main.ts"></script>
   </body>

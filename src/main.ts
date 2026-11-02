@@ -15,7 +15,8 @@ import { generateBoosters } from './physics/boosterLayout';
 import { SURFACES, surfaceAt } from './physics/surfaces';
 import { CALM, rollWind, windVector, type Wind } from './physics/wind';
 import { seededRandom } from './core/random';
-import { loadLongestDrive, saveLongestDrive } from './core/save';
+import { loadSave, writeSave } from './core/save';
+import { LongDriveRound, MONSTER_LINE_YARDS } from './modes/longDrive';
 import { BallTrail } from './scene/ballTrail';
 import { BoosterMeshes } from './scene/boosterMeshes';
 import { buildRangeProps } from './scene/rangeProps';
@@ -41,7 +42,7 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 
-const { scene, flag, sun } = buildRange();
+const { scene, flag, sun, monsterLine } = buildRange();
 const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 1000);
 const rig = new CameraRig(camera);
 
@@ -77,7 +78,7 @@ function newWind() {
   hud.wind(wind);
 }
 
-type Mode = 'menu' | 'ready' | 'swinging' | 'flying' | 'result';
+type Mode = 'menu' | 'ready' | 'swinging' | 'flying' | 'result' | 'roundOver';
 let mode: Mode = 'menu';
 
 // Swing input
@@ -91,7 +92,11 @@ let shot: { ball: BallState; strike: Strike; ballSpeed: number; spinTilt: number
 let resultAt = 0;
 let accumulator = 0;
 let boostsSeen = 0;
-let longestDrive = loadLongestDrive();
+const save = loadSave();
+
+// The Long Drive Competition in progress; null on the Driving Range.
+let round: LongDriveRound | null = null;
+let crossedMonsterLine = false;
 
 function resetToTee() {
   mode = 'ready';
@@ -99,6 +104,7 @@ function resetToTee() {
   released = null;
   accumulator = 0;
   boostsSeen = 0;
+  crossedMonsterLine = false;
   ball.position.copy(TEE_SPOT);
   ball.scale.setScalar(1);
   ball.visible = true;
@@ -107,7 +113,8 @@ function resetToTee() {
   newWind();
   env.boosters = generateBoosters(random).boosters;
   boosterMeshes.setLayout(env.boosters);
-  hud.longestDrive(longestDrive);
+  hud.longestDrive(save.longestYards);
+  hud.round(round);
   hud.hideResult();
   hud.showReset(false);
   hud.liveDistance(null);
@@ -117,9 +124,13 @@ function resetToTee() {
 function openMenu() {
   pressAt = null;
   samples = [];
+  round = null;
+  monsterLine.visible = false;
+  hud.hideRoundOver();
   resetToTee();
   mode = 'menu';
   boosterMeshes.group.visible = false;
+  hud.teeBalance(save.tees);
   hud.showMenu(true);
 }
 
@@ -127,11 +138,43 @@ function openMenu() {
 function startDrivingRange() {
   mode = 'ready';
   boosterMeshes.group.visible = true;
+  hud.resetLabel('Reset');
   hud.showMenu(false);
 }
 
+function startLongDrive() {
+  round = new LongDriveRound();
+  resetToTee();
+  boosterMeshes.group.visible = true;
+  monsterLine.visible = true;
+  hud.resetLabel('Skip');
+  hud.hideRoundOver();
+  hud.showMenu(false);
+}
+
+// Moves on from a finished shot: the next ball, or the end of the round.
+function advance() {
+  if (!round?.finished) {
+    resetToTee();
+    return;
+  }
+  mode = 'roundOver';
+  const isNew = round.bestYards > save.bestRoundYards;
+  save.bestRoundYards = Math.max(save.bestRoundYards, round.bestYards);
+  save.mostMonsters = Math.max(save.mostMonsters, round.monsters);
+  save.tees += round.tees;
+  writeSave(save);
+  hud.round(null);
+  hud.hideResult();
+  hud.showReset(false);
+  hud.showRoundOver(round, { yards: save.bestRoundYards, isNew, teesTotal: save.tees });
+}
+
 hud.onPlayRange(startDrivingRange);
+hud.onPlayLongDrive(startLongDrive);
+hud.onPlayAgain(startLongDrive);
 hud.onBackToMenu(openMenu);
+hud.onRoundOverMenu(openMenu);
 
 function cancelSwing(hint: string) {
   mode = 'ready';
@@ -142,7 +185,7 @@ function cancelSwing(hint: string) {
 
 canvas.addEventListener('pointerdown', (e) => {
   if (mode === 'result') {
-    if (e.timeStamp - resultAt > 300) resetToTee();
+    if (e.timeStamp - resultAt > 300) advance();
     return;
   }
   if (mode !== 'ready') return;
@@ -173,9 +216,19 @@ canvas.addEventListener('pointercancel', (e) => {
   if (mode === 'swinging' && e.pointerId === pointerId) cancelSwing(DEFAULT_HINT);
 });
 
-// Bring the ball back to the tee mid-shot, from the button or the R key.
+// The button or R key. On the Driving Range it brings the ball back. In a
+// round every ball counts, so it plays the shot out instantly instead.
 function resetShot() {
-  if (mode === 'flying' || mode === 'result') resetToTee();
+  if (mode === 'result') {
+    advance();
+  } else if (mode === 'flying' && !round) {
+    resetToTee();
+  } else if (mode === 'flying' && shot) {
+    while (shot.ball.phase !== 'stopped') {
+      stepBall(shot.ball, PHYSICS_DT, env);
+      trail.add(shot.ball.pos);
+    }
+  }
 }
 hud.onReset(resetShot);
 window.addEventListener('keydown', (e) => {
@@ -224,11 +277,14 @@ function finishShot(s: NonNullable<typeof shot>) {
   hud.liveDistance(null);
   const totalYards = horizontalDistance(TEE_SPOT, s.ball.pos) * METERS_TO_YARDS;
   // A ball in the water is lost, so it can't be the longest drive.
-  if (s.ball.lie !== 'water' && totalYards > longestDrive) {
-    longestDrive = totalYards;
-    saveLongestDrive(longestDrive);
-    hud.longestDrive(longestDrive, true);
+  const lost = s.ball.lie === 'water';
+  if (!lost && totalYards > save.longestYards) {
+    save.longestYards = totalYards;
+    writeSave(save);
+    hud.longestDrive(totalYards, true);
   }
+  const scored = round?.record({ yards: totalYards, strike: s.strike, lost });
+  hud.round(round, round?.scored.length); // still the ball just played
   hud.showResult({
     strike: s.strike,
     carryYards: (s.ball.carry ?? 0) * METERS_TO_YARDS,
@@ -237,6 +293,8 @@ function finishShot(s: NonNullable<typeof shot>) {
     shape: shapeName(s.spinTilt),
     lie: s.ball.lie ? SURFACES[s.ball.lie].label : '—',
     boosts: s.ball.used.length,
+    tees: scored?.tees,
+    next: !round ? 'Tap to hit again' : round.finished ? 'Tap for results' : 'Tap for the next ball',
   });
 }
 
@@ -269,7 +327,12 @@ renderer.setAnimationLoop(() => {
     // The ball is drawn scaled up in flight; lift it so it still sits on the grass.
     ball.position.copy(shot.ball.pos);
     ball.position.y += BALL_RADIUS * (FLIGHT_SCALE - 1);
-    hud.liveDistance(horizontalDistance(TEE_SPOT, shot.ball.pos) * METERS_TO_YARDS);
+    const yards = horizontalDistance(TEE_SPOT, shot.ball.pos) * METERS_TO_YARDS;
+    hud.liveDistance(yards);
+    if (round && !crossedMonsterLine && yards >= MONSTER_LINE_YARDS) {
+      crossedMonsterLine = true;
+      hud.monster();
+    }
     while (boostsSeen < shot.ball.used.length) {
       const booster = shot.ball.used[boostsSeen++];
       boosterMeshes.markUsed(booster);

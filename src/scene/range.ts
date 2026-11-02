@@ -1,6 +1,7 @@
 import * as THREE from 'three';
+import { MONSTER_LINE_YARDS } from '../modes/longDrive';
 import { METERS_TO_YARDS } from '../physics/ballFlight';
-import { PIN, RANGE_LAYOUT, type SurfaceKind } from '../physics/surfaces';
+import { FAIRWAY_WIDTH, PIN, RANGE_LAYOUT, type SurfaceKind } from '../physics/surfaces';
 
 // The driving range: ground, a fairway strip, a pin and yardage boards.
 // Units are meters; +Z points down the range, away from the golfer.
@@ -22,6 +23,7 @@ export interface Range {
   flag: THREE.Object3D;
   /** Casts the ball's shadow; keep it centered on the ball. */
   sun: THREE.DirectionalLight;
+  monsterLine: THREE.Group;
 }
 
 export const SUN_OFFSET = new THREE.Vector3(-20, 40, -10);
@@ -113,7 +115,56 @@ export function buildRange(): Range {
     }
   }
 
-  return { scene, flag, sun };
+  const monsterLine = buildMonsterLine();
+  monsterLine.visible = false;
+  scene.add(monsterLine);
+
+  return { scene, flag, sun, monsterLine };
+}
+
+/** A glowing stripe across the fairway, with a banner high over it. */
+function buildMonsterLine(): THREE.Group {
+  const COLOR = 0x2de2e6;
+  const BANNER_HEIGHT = 34;
+  const line = new THREE.Group();
+  line.position.z = MONSTER_LINE_YARDS / METERS_TO_YARDS;
+
+  const stripe = new THREE.Mesh(
+    new THREE.PlaneGeometry(FAIRWAY_WIDTH, 2.5),
+    new THREE.MeshBasicMaterial({ color: COLOR }),
+  );
+  stripe.rotation.x = -Math.PI / 2;
+  stripe.position.y = 0.05;
+  line.add(stripe);
+
+  const glass = new THREE.MeshBasicMaterial({ color: COLOR });
+  for (const x of [-FAIRWAY_WIDTH / 2, FAIRWAY_WIDTH / 2]) {
+    const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, BANNER_HEIGHT + 4), glass);
+    tower.position.set(x, (BANNER_HEIGHT + 4) / 2, 0);
+    line.add(tower);
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#0b2b33';
+  ctx.fillRect(0, 0, 1024, 128);
+  ctx.fillStyle = '#2de2e6';
+  ctx.font = '900 84px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`MONSTER LINE · ${MONSTER_LINE_YARDS} YDS`, 512, 68);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const banner = new THREE.Mesh(
+    new THREE.PlaneGeometry(FAIRWAY_WIDTH, FAIRWAY_WIDTH / 8),
+    new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide }),
+  );
+  banner.rotation.y = Math.PI; // reads from the tee
+  banner.position.y = BANNER_HEIGHT;
+  line.add(banner);
+  return line;
 }
 
 function groundMaterial(color: number): THREE.MeshLambertMaterial {

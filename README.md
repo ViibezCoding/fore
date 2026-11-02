@@ -8,7 +8,7 @@ A flick-to-swing golf game that runs in your browser. Flick to swing, nail the t
 
 ## How to play
 
-Pick **Driving Range** from the menu. The other modes are coming soon.
+Pick a mode from the menu. **Driving Range** is free play. **Long Drive Competition** gives you 10 balls: your longest drive is your score, drives past the Monster Line pay bonus Tees, and your best is saved. The other modes are coming soon.
 
 Press and hold anywhere: a ring starts shrinking toward the ball. Flick up and let go as the ring meets the ball.
 
