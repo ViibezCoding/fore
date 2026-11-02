@@ -33,7 +33,7 @@ export type Patch =
 
 /** What sits on top of the rough, in drawing order. The last match wins. */
 export const RANGE_LAYOUT: Patch[] = [
-  { kind: 'fairway', shape: 'rect', x: 0, z: 800, width: FAIRWAY_WIDTH, length: 1600 },
+  { kind: 'fairway', shape: 'rect', x: 0, z: 790, width: FAIRWAY_WIDTH, length: 1620 },
   { kind: 'green', shape: 'ellipse', x: 6, z: 150, rx: 14, rz: 14 },
   { kind: 'sand', shape: 'ellipse', x: -8, z: 138, rx: 6, rz: 4 }, // front right of the green
   { kind: 'sand', shape: 'ellipse', x: 23, z: 158, rx: 5, rz: 8 }, // left of the green

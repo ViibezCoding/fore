@@ -46,23 +46,26 @@ export function buildRange(): Range {
   // Ground: rough everywhere, with the layout drawn on top
   const rough = new THREE.Mesh(
     new THREE.PlaneGeometry(6000, 6000),
-    new THREE.MeshLambertMaterial({ color: SURFACE_COLORS.rough }),
+    groundMaterial(SURFACE_COLORS.rough),
   );
   rough.rotation.x = -Math.PI / 2;
   rough.receiveShadow = true;
+  rough.renderOrder = -100;
   scene.add(rough);
 
   // Fairway, green, bunkers and water, from the same layout the physics reads.
-  // Each patch sits a hair above the last so they don't flicker.
+  // A depth test can't separate layers this thin and this far apart, so they
+  // paint in order, before everything else, and stay out of the depth buffer.
   RANGE_LAYOUT.forEach((patch, i) => {
     const geometry =
       patch.shape === 'rect'
         ? new THREE.PlaneGeometry(patch.width, patch.length)
         : new THREE.CircleGeometry(1, 48).scale(patch.rx, patch.rz, 1);
-    const mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: SURFACE_COLORS[patch.kind] }));
+    const mesh = new THREE.Mesh(geometry, groundMaterial(SURFACE_COLORS[patch.kind]));
     mesh.rotation.x = -Math.PI / 2;
-    mesh.position.set(patch.x, 0.01 + i * 0.005, patch.z);
+    mesh.position.set(patch.x, 0, patch.z);
     mesh.receiveShadow = true;
+    mesh.renderOrder = -99 + i;
     scene.add(mesh);
   });
 
@@ -111,6 +114,10 @@ export function buildRange(): Range {
   }
 
   return { scene, flag, sun };
+}
+
+function groundMaterial(color: number): THREE.MeshLambertMaterial {
+  return new THREE.MeshLambertMaterial({ color, depthWrite: false });
 }
 
 function yardageBoard(yards: number): THREE.Mesh {

@@ -17,6 +17,7 @@ import { CALM, rollWind, windVector, type Wind } from './physics/wind';
 import { seededRandom } from './core/random';
 import { BallTrail } from './scene/ballTrail';
 import { BoosterMeshes } from './scene/boosterMeshes';
+import { buildRangeProps } from './scene/rangeProps';
 import { CameraRig } from './scene/cameraRig';
 import { SUN_OFFSET, TEE_HEIGHT, buildRange } from './scene/range';
 import { hud } from './ui/hud';
@@ -49,6 +50,8 @@ const ball = new THREE.Mesh(
 );
 ball.castShadow = true;
 scene.add(ball);
+
+scene.add(buildRangeProps());
 
 const boosterMeshes = new BoosterMeshes();
 scene.add(boosterMeshes.group);
