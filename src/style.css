@@ -96,6 +96,14 @@ body {
   color: #ffd84a;
 }
 
+.callout.boost-ring {
+  color: #ffc53d;
+}
+
+.callout.boost-pad {
+  color: #ff7ac0;
+}
+
 .callout.early,
 .callout.late,
 .strike.early,
@@ -167,9 +175,37 @@ body {
   opacity: 0.8;
 }
 
-.reset {
+.wind {
   position: absolute;
   top: max(12px, env(safe-area-inset-top));
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 6px 8px;
+  border-radius: 999px;
+  background: rgb(20 50 30 / 55%);
+  font-size: 16px;
+  font-weight: 600;
+  text-shadow: none;
+}
+
+.wind b {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.wind-arrow {
+  transition: transform 0.4s ease-out;
+}
+
+.wind.calm .wind-arrow {
+  opacity: 0.35;
+}
+
+.reset {
+  position: absolute;
+  top: max(60px, calc(env(safe-area-inset-top) + 48px));
   right: 16px;
   pointer-events: auto;
   padding: 8px 14px;

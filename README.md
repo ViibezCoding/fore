@@ -15,6 +15,10 @@ Press and hold anywhere: a ring starts shrinking toward the ball. Flick up and l
 - **Bending the flick** curves the ball the same way (draw, fade, hook, slice).
 - **Letting go as the ring lines up** gives a **Perfect** strike. Early pulls the ball left and low; late pushes it right and high.
 
+Every ball gets a new wind, shown by the arrow in the top right (up means it's blowing downrange) and by the flag. Where the ball lands matters: it runs out on the fairway and green, stops quickly in the rough, plugs in bunkers and is lost in the water.
+
+The goal is distance, and boosters get you there. Fly through a gold **boost ring** for a burst of speed, or land on a pink **bounce pad** to spring back into the air. Each one works once per ball, and a good shot can chain several. The layout changes with every new ball, including after a reset.
+
 Press **R** or the **Reset** button to bring the ball back to the tee mid-shot.
 
 The small line at the bottom shows the raw swing numbers, for tuning.
@@ -29,6 +33,8 @@ npm run dev      # starts the game at http://localhost:5173/fore/
 ```
 
 Edit any file in `src/` and the browser updates on its own.
+
+Two URL options help with tuning: `?wind=off` for calm air, and `?seed=123` to replay the same series of winds and booster layouts.
 
 ### Test on your phone
 `npm run dev` also prints a **Network** address (like `http://192.168.1.20:5173/fore/`). Open it on a phone connected to the same Wi-Fi.

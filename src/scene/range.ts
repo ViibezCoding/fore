@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { METERS_TO_YARDS } from '../physics/ballFlight';
+import { PIN, RANGE_LAYOUT, type SurfaceKind } from '../physics/surfaces';
 
 // The driving range: ground, a fairway strip, a pin and yardage boards.
 // Units are meters; +Z points down the range, away from the golfer.
@@ -7,9 +8,18 @@ import { METERS_TO_YARDS } from '../physics/ballFlight';
 export const SKY = 0x7ec8f0;
 export const TEE_HEIGHT = 0.03;
 
+const SURFACE_COLORS: Record<SurfaceKind, number> = {
+  fairway: 0x5fb04f,
+  rough: 0x3f8a3a,
+  green: 0x7ccc63,
+  sand: 0xe6d49a,
+  water: 0x3d8fd1,
+};
+
 export interface Range {
   scene: THREE.Scene;
-  flag: THREE.Mesh;
+  /** Pivot at the top of the pole; the flag streams along its +X. */
+  flag: THREE.Object3D;
   /** Casts the ball's shadow; keep it centered on the ball. */
   sun: THREE.DirectionalLight;
 }
@@ -33,23 +43,28 @@ export function buildRange(): Range {
   sun.shadow.camera.bottom = -5;
   scene.add(sun, sun.target);
 
-  // Ground: rough everywhere, a lighter fairway strip down the middle
+  // Ground: rough everywhere, with the layout drawn on top
   const rough = new THREE.Mesh(
-    new THREE.PlaneGeometry(2000, 2000),
-    new THREE.MeshLambertMaterial({ color: 0x3f8a3a }),
+    new THREE.PlaneGeometry(6000, 6000),
+    new THREE.MeshLambertMaterial({ color: SURFACE_COLORS.rough }),
   );
   rough.rotation.x = -Math.PI / 2;
   rough.receiveShadow = true;
   scene.add(rough);
 
-  const fairway = new THREE.Mesh(
-    new THREE.PlaneGeometry(40, 600),
-    new THREE.MeshLambertMaterial({ color: 0x5fb04f }),
-  );
-  fairway.rotation.x = -Math.PI / 2;
-  fairway.position.set(0, 0.01, 300);
-  fairway.receiveShadow = true;
-  scene.add(fairway);
+  // Fairway, green, bunkers and water, from the same layout the physics reads.
+  // Each patch sits a hair above the last so they don't flicker.
+  RANGE_LAYOUT.forEach((patch, i) => {
+    const geometry =
+      patch.shape === 'rect'
+        ? new THREE.PlaneGeometry(patch.width, patch.length)
+        : new THREE.CircleGeometry(1, 48).scale(patch.rx, patch.rz, 1);
+    const mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: SURFACE_COLORS[patch.kind] }));
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.set(patch.x, 0.01 + i * 0.005, patch.z);
+    mesh.receiveShadow = true;
+    scene.add(mesh);
+  });
 
   const tee = new THREE.Mesh(
     new THREE.CylinderGeometry(0.004, 0.002, TEE_HEIGHT),
@@ -58,35 +73,29 @@ export function buildRange(): Range {
   tee.position.y = TEE_HEIGHT / 2;
   scene.add(tee);
 
-  // Pin and flag downrange
-  const PIN_DISTANCE = 150;
+  // Pin, with the flag on a pivot at the top so it can swing with the wind
   const pole = new THREE.Mesh(
     new THREE.CylinderGeometry(0.05, 0.05, 6),
     new THREE.MeshLambertMaterial({ color: 0xf2f2f2 }),
   );
-  pole.position.set(6, 3, PIN_DISTANCE);
+  pole.position.set(PIN.x, 3, PIN.z);
   scene.add(pole);
 
-  const flag = new THREE.Mesh(
+  const flag = new THREE.Object3D();
+  flag.position.set(PIN.x, 5.3, PIN.z);
+  const cloth = new THREE.Mesh(
     new THREE.PlaneGeometry(2, 1.3),
     new THREE.MeshLambertMaterial({ color: 0xe8443a, side: THREE.DoubleSide }),
   );
-  flag.position.set(7, 5.3, PIN_DISTANCE);
+  cloth.position.x = 1; // hangs off the pole along the pivot's +X
+  flag.add(cloth);
   scene.add(flag);
 
-  const green = new THREE.Mesh(
-    new THREE.CircleGeometry(14, 48),
-    new THREE.MeshLambertMaterial({ color: 0x7ccc63 }),
-  );
-  green.rotation.x = -Math.PI / 2;
-  green.position.set(6, 0.02, PIN_DISTANCE);
-  scene.add(green);
-
   // Yardage: a white line across the fairway and a board on each side
-  for (let yards = 50; yards <= 350; yards += 50) {
+  for (let yards = 50; yards <= 1500; yards += 50) {
     const z = yards / METERS_TO_YARDS;
     const line = new THREE.Mesh(
-      new THREE.PlaneGeometry(40, 0.4),
+      new THREE.PlaneGeometry(100, 0.4),
       new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 }),
     );
     line.rotation.x = -Math.PI / 2;
@@ -94,7 +103,7 @@ export function buildRange(): Range {
     scene.add(line);
 
     const board = yardageBoard(yards);
-    for (const x of [-24, 24]) {
+    for (const x of [-54, 54]) {
       const b = board.clone();
       b.position.set(x, 2.5, z);
       scene.add(b);

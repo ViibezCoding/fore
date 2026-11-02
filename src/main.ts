@@ -9,15 +9,22 @@ import {
   launchBall,
   stepBall,
   type BallState,
+  type FlightEnv,
 } from './physics/ballFlight';
+import { generateBoosters } from './physics/boosterLayout';
+import { SURFACES, surfaceAt } from './physics/surfaces';
+import { CALM, rollWind, windVector, type Wind } from './physics/wind';
+import { seededRandom } from './core/random';
 import { BallTrail } from './scene/ballTrail';
+import { BoosterMeshes } from './scene/boosterMeshes';
 import { CameraRig } from './scene/cameraRig';
 import { SUN_OFFSET, TEE_HEIGHT, buildRange } from './scene/range';
 import { hud } from './ui/hud';
 import { SwingOverlay, type OverlayView } from './ui/swingOverlay';
 
-// Phase 1 swing prototype: press and hold to start the backswing, flick up
-// to swing, and release as the ring closes on the ball.
+// Press and hold to start the backswing, flick up to swing, and release as
+// the ring closes on the ball. Then the ball flies through the wind and
+// bounces and rolls on whatever it lands on.
 
 const DEFAULT_HINT = 'Press and hold, then flick up as the ring closes';
 const MPS_TO_MPH = 2.23694;
@@ -43,8 +50,28 @@ const ball = new THREE.Mesh(
 ball.castShadow = true;
 scene.add(ball);
 
+const boosterMeshes = new BoosterMeshes();
+scene.add(boosterMeshes.group);
+
 const trail = new BallTrail();
 scene.add(trail.line);
+
+// Every ball gets a new wind and booster layout. Add ?seed=123 to the URL to
+// replay the same series, or ?wind=off for calm air while tuning.
+const params = new URLSearchParams(window.location.search);
+const random = seededRandom(Number(params.get('seed')) || Date.now());
+const windOff = params.get('wind') === 'off';
+let wind: Wind = CALM;
+const env: FlightEnv = { wind: new THREE.Vector3(), surfaceAt: (x, z) => surfaceAt(x, z), boosters: [] };
+let flagYaw = 0;
+
+function newWind() {
+  wind = windOff ? CALM : rollWind(random);
+  env.wind.copy(windVector(wind));
+  // The flag streams along its pivot's +X; turn that to point downwind.
+  if (wind.speed > 0) flagYaw = Math.atan2(-env.wind.z, env.wind.x);
+  hud.wind(wind);
+}
 
 type Mode = 'ready' | 'swinging' | 'flying' | 'result';
 let mode: Mode = 'ready';
@@ -59,16 +86,22 @@ let released: OverlayView['released'] = null;
 let shot: { ball: BallState; strike: Strike; ballSpeed: number; spinTilt: number } | null = null;
 let resultAt = 0;
 let accumulator = 0;
+let boostsSeen = 0;
 
 function resetToTee() {
   mode = 'ready';
   shot = null;
   released = null;
   accumulator = 0;
+  boostsSeen = 0;
   ball.position.copy(TEE_SPOT);
   ball.scale.setScalar(1);
+  ball.visible = true;
   trail.clear();
   rig.toTee();
+  newWind();
+  env.boosters = generateBoosters(random).boosters;
+  boosterMeshes.setLayout(env.boosters);
   hud.hideResult();
   hud.showReset(false);
   hud.liveDistance(null);
@@ -155,7 +188,8 @@ function releaseSwing(at: number) {
   hud.debug(
     `flick ${flick.speed.toFixed(1)} screens/s · club ${Math.round(swing.clubSpeed * MPS_TO_MPH)} mph · ` +
       `timing ${signed(swing.timingMs)} ms · aim ${signed(swing.launch.aim * DEG, 1)}° · ` +
-      `curve ${signed(flick.curve * DEG)}° → tilt ${signed(swing.launch.spinTilt * DEG, 1)}°`,
+      `curve ${signed(flick.curve * DEG)}° → tilt ${signed(swing.launch.spinTilt * DEG, 1)}° · ` +
+      `wind ${(wind.speed * MPS_TO_MPH).toFixed(1)} mph at ${signed(wind.direction * DEG)}°`,
   );
 }
 
@@ -169,6 +203,8 @@ function finishShot(s: NonNullable<typeof shot>) {
     totalYards: horizontalDistance(TEE_SPOT, s.ball.pos) * METERS_TO_YARDS,
     ballMph: s.ballSpeed * MPS_TO_MPH,
     shape: shapeName(s.spinTilt),
+    lie: s.ball.lie ? SURFACES[s.ball.lie].label : '—',
+    boosts: s.ball.used.length,
   });
 }
 
@@ -194,7 +230,7 @@ renderer.setAnimationLoop(() => {
   if (mode === 'flying' && shot) {
     accumulator += dt;
     while (accumulator >= PHYSICS_DT && shot.ball.phase !== 'stopped') {
-      stepBall(shot.ball, PHYSICS_DT);
+      stepBall(shot.ball, PHYSICS_DT, env);
       trail.add(shot.ball.pos);
       accumulator -= PHYSICS_DT;
     }
@@ -202,6 +238,13 @@ renderer.setAnimationLoop(() => {
     ball.position.copy(shot.ball.pos);
     ball.position.y += BALL_RADIUS * (FLIGHT_SCALE - 1);
     hud.liveDistance(horizontalDistance(TEE_SPOT, shot.ball.pos) * METERS_TO_YARDS);
+    while (boostsSeen < shot.ball.used.length) {
+      const booster = shot.ball.used[boostsSeen++];
+      boosterMeshes.markUsed(booster);
+      hud.boost(booster.kind);
+    }
+    // A ball in the water is gone.
+    ball.visible = shot.ball.lie !== 'water';
     if (shot.ball.phase === 'stopped') finishShot(shot);
   }
 
@@ -209,7 +252,8 @@ renderer.setAnimationLoop(() => {
 
   sun.target.position.copy(ball.position);
   sun.position.copy(ball.position).add(SUN_OFFSET);
-  flag.rotation.y = Math.sin(now / 500) * 0.15;
+  boosterMeshes.animate(now);
+  flag.rotation.y = flagYaw + Math.sin(now / (wind.speed > 3 ? 180 : 500)) * 0.15;
   renderer.render(scene, camera);
 
   teeScreen.copy(TEE_SPOT).project(camera);

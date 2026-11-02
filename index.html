@@ -13,6 +13,12 @@
     <canvas id="overlay"></canvas>
     <div class="hud">
       <p class="title">Fore!</p>
+      <div class="wind" id="wind" aria-label="Wind">
+        <svg class="wind-arrow" id="wind-arrow" viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
+          <path d="M12 2 L19 11 H14.5 V22 H9.5 V11 H5 Z" fill="currentColor" />
+        </svg>
+        <span><b id="wind-speed">0</b> mph</span>
+      </div>
       <p class="hint" id="hint"></p>
       <p class="callout" id="callout"></p>
       <p class="live" id="live" hidden><span id="live-yards">0</span> yds</p>
@@ -21,6 +27,8 @@
         <dl>
           <dt>Carry</dt><dd id="r-carry"></dd>
           <dt>Total</dt><dd id="r-total"></dd>
+          <dt>Lie</dt><dd id="r-lie"></dd>
+          <dt>Boosts</dt><dd id="r-boosts"></dd>
           <dt>Ball speed</dt><dd id="r-speed"></dd>
           <dt>Shape</dt><dd id="r-shape"></dd>
         </dl>
