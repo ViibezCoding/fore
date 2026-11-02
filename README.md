@@ -8,6 +8,8 @@ A flick-to-swing golf game that runs in your browser. Flick to swing, nail the t
 
 ## How to play
 
+Pick **Driving Range** from the menu. The other modes are coming soon.
+
 Press and hold anywhere: a ring starts shrinking toward the ball. Flick up and let go as the ring meets the ball.
 
 - **Flick speed** sets power.

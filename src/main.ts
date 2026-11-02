@@ -77,8 +77,8 @@ function newWind() {
   hud.wind(wind);
 }
 
-type Mode = 'ready' | 'swinging' | 'flying' | 'result';
-let mode: Mode = 'ready';
+type Mode = 'menu' | 'ready' | 'swinging' | 'flying' | 'result';
+let mode: Mode = 'menu';
 
 // Swing input
 let pressAt: number | null = null;
@@ -113,6 +113,25 @@ function resetToTee() {
   hud.liveDistance(null);
   hud.showHint(DEFAULT_HINT);
 }
+
+function openMenu() {
+  pressAt = null;
+  samples = [];
+  resetToTee();
+  mode = 'menu';
+  boosterMeshes.group.visible = false;
+  hud.showMenu(true);
+}
+
+// The Driving Range is the free-play mode: swing as often as you like.
+function startDrivingRange() {
+  mode = 'ready';
+  boosterMeshes.group.visible = true;
+  hud.showMenu(false);
+}
+
+hud.onPlayRange(startDrivingRange);
+hud.onBackToMenu(openMenu);
 
 function cancelSwing(hint: string) {
   mode = 'ready';
@@ -230,7 +249,7 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 resize();
-resetToTee();
+openMenu();
 
 const teeScreen = new THREE.Vector3();
 let lastFrame = performance.now();

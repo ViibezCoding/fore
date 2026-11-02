@@ -252,6 +252,82 @@ body {
   font-size: 13px;
 }
 
+.to-menu {
+  position: absolute;
+  left: 16px;
+  bottom: max(36px, calc(env(safe-area-inset-bottom) + 28px));
+  pointer-events: auto;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(20 50 30 / 72%);
+  color: #fff;
+  font: 600 16px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  cursor: pointer;
+}
+
+/* The in-game HUD stays out of the way while the menu is up. */
+body.in-menu .hud {
+  display: none;
+}
+
+.menu {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px;
+  background: rgb(12 32 20 / 38%);
+}
+
+.menu h1 {
+  margin-bottom: 14px;
+  font-size: clamp(56px, 13vmin, 96px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-shadow: 0 3px 12px rgb(0 0 0 / 45%);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: min(420px, 100%);
+  padding: 14px 20px;
+  border: 0;
+  border-radius: 14px;
+  background: #ffd84a;
+  color: #17351f;
+  font: 800 20px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.12s;
+}
+
+.menu-item:hover:enabled,
+.menu-item:focus-visible {
+  transform: scale(1.03);
+}
+
+.menu-item:disabled {
+  background: rgb(20 50 30 / 78%);
+  color: rgb(255 255 255 / 72%);
+  cursor: default;
+}
+
+.menu-item span {
+  flex: none;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffd84a;
+}
+
 .debug {
   position: absolute;
   bottom: max(8px, env(safe-area-inset-bottom));

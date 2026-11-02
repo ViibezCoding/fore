@@ -22,6 +22,7 @@ const liveYards = $('live-yards');
 const card = $('card');
 const debug = $('debug');
 const reset = $<HTMLButtonElement>('reset');
+const menu = $('menu');
 const longest = $('longest');
 const longestYards = $('longest-yards');
 const windBox = $('wind');
@@ -82,6 +83,19 @@ export const hud = {
 
   hideResult() {
     card.hidden = true;
+  },
+
+  showMenu(visible: boolean) {
+    menu.hidden = !visible;
+    document.body.classList.toggle('in-menu', visible);
+  },
+
+  onPlayRange(handler: () => void) {
+    $('play-range').addEventListener('click', handler);
+  },
+
+  onBackToMenu(handler: () => void) {
+    $('to-menu').addEventListener('click', handler);
   },
 
   longestDrive(yards: number, isNew = false) {
